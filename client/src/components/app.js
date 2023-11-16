@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 
 import Container from "./framework/container";
 import Layout from "./framework/layout";
+import Header from "./header";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
@@ -68,6 +69,7 @@ class App extends React.Component {
         ) : null}
         {loading || error ? null : (
           <Layout>
+            <Header />
             <LeftSideBar />
             {(viewportRef) => (
               <>
@@ -76,6 +78,15 @@ class App extends React.Component {
                 <Autosave />
                 <Legend viewportRef={viewportRef} />
                 <Graph key={graphRenderCounter} viewportRef={viewportRef} />
+              </>
+            )}
+            {(viewportRef2) => (
+              <>
+                <MenuBar />
+                <Embedding />
+                <Autosave />
+                <Legend viewportRef2={viewportRef2} />
+                <Graph key={graphRenderCounter} viewportRef2={viewportRef2} />
               </>
             )}
             <RightSideBar />

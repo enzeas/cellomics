@@ -23,20 +23,26 @@ class Layout extends React.Component {
 
   render() {
     const { children } = this.props;
-    const [leftSidebar, renderGraph, rightSidebar] = children;
+    const [header, leftSidebar, renderGraph, renderGraph2, rightSidebar] =
+      children;
     return (
       <div
         style={{
           display: "grid",
           gridTemplateColumns: `
           [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
-          [left-sidebar-end graph-start] auto
-          [graph-end right-sidebar-start] ${
-            globals.rightSidebarWidth + 1
-          }px [right-sidebar-end]
+          [left-sidebar-end graph-start] 1fr
+          [graph-end graph2-start] 1fr
+          [graph2-end right-sidebar-start] ${globals.rightSidebarWidth + 1}px 
+          [right-sidebar-end]
         `,
-          gridTemplateRows: "[top] auto [bottom]",
-          gridTemplateAreas: "left-sidebar | graph | right-sidebar",
+          gridTemplateRows: `[top] ${
+            globals.headerHeight + 1
+          }px [mid] auto [bottom]`,
+          gridTemplateAreas: `
+          "header header header header"
+          "left-sidebar graph graph2 right-sidebar"
+          `,
           columnGap: "0px",
           justifyItems: "stretch",
           alignItems: "stretch",
@@ -50,7 +56,17 @@ class Layout extends React.Component {
       >
         <div
           style={{
-            gridArea: "top / left-sidebar-start / bottom / left-sidebar-end",
+            gridArea: "top / left-sidebar-start / mid / right-sidebar-end",
+            position: "relative",
+            height: "inherit",
+            overflowY: "auto",
+          }}
+        >
+          {header}
+        </div>
+        <div
+          style={{
+            gridArea: "mid / left-sidebar-start / bottom / left-sidebar-end",
             position: "relative",
             height: "inherit",
             overflowY: "auto",
@@ -61,7 +77,7 @@ class Layout extends React.Component {
         <div
           style={{
             zIndex: 0,
-            gridArea: "top / graph-start / bottom / graph-end",
+            gridArea: "mid / graph-start / bottom / graph-end",
             position: "relative",
             height: "inherit",
           }}
@@ -73,7 +89,17 @@ class Layout extends React.Component {
         </div>
         <div
           style={{
-            gridArea: "top / right-sidebar-start / bottom / right-sidebar-end",
+            zIndex: 0,
+            gridArea: "mid / graph2-start / bottom / graph2-end",
+            position: "relative",
+            height: "inherit",
+          }}
+        >
+          {this.viewportRef2 ? renderGraph2(this.viewportRef2) : null}
+        </div>
+        <div
+          style={{
+            gridArea: "mid / right-sidebar-start / bottom / right-sidebar-end",
             position: "relative",
             height: "inherit",
             overflowY: "auto",

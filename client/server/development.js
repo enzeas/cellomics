@@ -47,13 +47,13 @@ app.get("/logout", async (req, res) => {
   }
 });
 
-app.listen(CLIENT_PORT, (err) => {
+app.listen(CLIENT_PORT, '0.0.0.0', (err) => {
   if (err) {
     console.log(err);
     return;
   }
 
-  utils.clearConsole();
+  // utils.clearConsole();
   console.log(chalk.cyan("Starting the development server..."));
   console.log();
 });
