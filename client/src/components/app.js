@@ -71,13 +71,13 @@ class App extends React.Component {
           <Layout>
             <Header />
             <LeftSideBar />
-            {(viewportRef) => (
+            {(viewportRef1) => (
               <>
                 <MenuBar />
                 <Embedding />
                 <Autosave />
-                <Legend viewportRef={viewportRef} />
-                <Graph key={graphRenderCounter} viewportRef={viewportRef} />
+                <Legend viewportRef={viewportRef1} />
+                <Graph key={graphRenderCounter} id='viewportRef1' viewportRef={viewportRef1} />
               </>
             )}
             {(viewportRef2) => (
@@ -85,8 +85,8 @@ class App extends React.Component {
                 <MenuBar />
                 <Embedding />
                 <Autosave />
-                <Legend viewportRef2={viewportRef2} />
-                <Graph key={graphRenderCounter} viewportRef2={viewportRef2} />
+                <Legend viewportRef={viewportRef2} />
+                <Graph key={graphRenderCounter} id='viewportRef2' viewportRef={viewportRef2} />
               </>
             )}
             <RightSideBar />

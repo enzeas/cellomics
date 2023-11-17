@@ -82,10 +82,10 @@ class Layout extends React.Component {
             height: "inherit",
           }}
           ref={(ref) => {
-            this.viewportRef = ref;
+            this.viewportRef1 = ref;
           }}
         >
-          {this.viewportRef ? renderGraph(this.viewportRef) : null}
+          {this.viewportRef1 ? renderGraph(this.viewportRef1) : null}
         </div>
         <div
           style={{
@@ -93,6 +93,9 @@ class Layout extends React.Component {
             gridArea: "mid / graph2-start / bottom / graph2-end",
             position: "relative",
             height: "inherit",
+          }}
+          ref={(ref) => {
+            this.viewportRef2 = ref;
           }}
         >
           {this.viewportRef2 ? renderGraph2(this.viewportRef2) : null}

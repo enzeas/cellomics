@@ -317,7 +317,10 @@ class Graph extends React.Component {
     if (e.type !== "wheel") e.preventDefault();
     if (camera.handleEvent(e, projectionTF)) {
       this.renderCanvas();
-      this.setState((state) => ({ ...state, updateOverlay: !state.updateOverlay }));
+      this.setState((state) => ({
+        ...state,
+        updateOverlay: !state.updateOverlay,
+      }));
     }
   };
 
@@ -533,7 +536,7 @@ class Graph extends React.Component {
     const positions = this.computePointPositions(X, Y, modelTF);
 
     const colorTable = this.updateColorTable(colorsProp, colorDf);
-    const colors = this.computePointColors(colorTable.rgb);
+    let colors = this.computePointColors(colorTable.rgb);
 
     const { colorAccessor } = colorsProp;
     const colorByData = colorDf?.col(colorAccessor)?.asArray();
@@ -550,6 +553,26 @@ class Graph extends React.Component {
       pointDilationData,
       pointDilationLabel
     );
+
+    if (
+      this.props.id === "viewportRef1" &&
+      (colorsProp.colorMode === "color by expression" ||
+        colorsProp.colorMode === "color by geneset mean expression")
+    ) {
+      colors = this.state.colorState.colors;
+    } else if (
+      this.props.id === "viewportRef2" &&
+      (colorsProp.colorMode === "color by categorical metadata" ||
+        colorsProp.colorMode === "color by continuous metadata")
+    ) {
+      colors = this.state.colorState.colors;
+    }
+    this.setState(prevState => ({
+      colorState: {
+        ...prevState.colorState,
+        colors: colors
+      }
+    }));
 
     const { width, height } = viewport;
     return {
@@ -951,32 +974,29 @@ const ErrorLoading = ({ displayName, error, width, height }) => {
   );
 };
 
-const StillLoading = ({ displayName, width, height }) => 
+const StillLoading = ({ displayName, width, height }) => (
   /*
   Render a busy/loading indicator
   */
-   (
+  <div
+    style={{
+      position: "fixed",
+      fontWeight: 500,
+      top: height / 2,
+      width,
+    }}
+  >
     <div
       style={{
-        position: "fixed",
-        fontWeight: 500,
-        top: height / 2,
-        width,
+        display: "flex",
+        justifyContent: "center",
+        justifyItems: "center",
+        alignItems: "center",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          justifyItems: "center",
-          alignItems: "center",
-        }}
-      >
-        <Button minimal loading intent="primary" />
-        <span style={{ fontStyle: "italic" }}>Loading {displayName}</span>
-      </div>
+      <Button minimal loading intent="primary" />
+      <span style={{ fontStyle: "italic" }}>Loading {displayName}</span>
     </div>
-  )
-;
-
+  </div>
+);
 export default Graph;
