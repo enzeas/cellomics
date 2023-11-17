@@ -115,6 +115,21 @@ class ContinuousLegend extends React.Component {
     const { annoMatrix, colors, genesets } = this.props;
     if (!colors || !annoMatrix) return;
 
+    if (
+      this.props.id === "legend1" &&
+      (colors.colorMode === "color by expression" ||
+        colors.colorMode === "color by geneset mean expression")
+    ) {
+      return;
+    }
+    if (
+      this.props.id === "legend2" &&
+      (colors.colorMode === "color by categorical metadata" ||
+        colors.colorMode === "color by continuous metadata")
+    ) {
+      return;
+    }
+
     if (colors !== prevProps?.colors || annoMatrix !== prevProps?.annoMatrix) {
       const { schema } = annoMatrix;
       const { colorMode, colorAccessor, userColors } = colors;
@@ -138,15 +153,16 @@ class ContinuousLegend extends React.Component {
       const colorScale = colorTable.scale;
       const range = colorScale?.range;
       const [domainMin, domainMax] = colorScale?.domain?.() ?? [0, 0];
+      const idHash = "#".concat(this.props.id);
 
       /* always remove it, if it's not continuous we don't put it back. */
-      d3.select("#continuous_legend").selectAll("*").remove();
+      d3.select(idHash).selectAll("*").remove();
 
       if (colorAccessor && colorScale && range && domainMin < domainMax) {
         /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
         if (range()[0][0] !== "#") {
           continuous(
-            "#continuous_legend",
+            idHash,
             d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
             colorAccessor
           );
@@ -156,9 +172,10 @@ class ContinuousLegend extends React.Component {
   }
 
   render() {
+    const { id } = this.props;
     return (
       <div
-        id="continuous_legend"
+        id={id}
         style={{
           position: "absolute",
           left: 8,

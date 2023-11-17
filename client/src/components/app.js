@@ -76,7 +76,7 @@ class App extends React.Component {
                 <MenuBar />
                 <Embedding />
                 <Autosave />
-                <Legend viewportRef={viewportRef1} />
+                <Legend id='legend1' viewportRef={viewportRef1} />
                 <Graph key={graphRenderCounter} id='viewportRef1' viewportRef={viewportRef1} />
               </>
             )}
@@ -85,7 +85,7 @@ class App extends React.Component {
                 <MenuBar />
                 <Embedding />
                 <Autosave />
-                <Legend viewportRef={viewportRef2} />
+                <Legend id='legend2' viewportRef={viewportRef2} />
                 <Graph key={graphRenderCounter} id='viewportRef2' viewportRef={viewportRef2} />
               </>
             )}
