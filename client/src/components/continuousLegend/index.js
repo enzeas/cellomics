@@ -111,21 +111,53 @@ const continuous = (selectorId, colorScale, colorAccessor) => {
   genesets: state.genesets.genesets,
 }))
 class ContinuousLegend extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      colorState: {
+        colorAccessor: null,
+        colorMode: null,
+      },
+    };
+  }
+
   async componentDidUpdate(prevProps) {
     const { annoMatrix, colors, genesets } = this.props;
     if (!colors || !annoMatrix) return;
 
     if (
+      colors.colorMode !== null &&
+      colors.colorMode !== this.state.colorState.colorMode
+    ) {
+      this.setState((prevState) => ({
+        colorState: {
+          ...prevState.colorState,
+          colorMode: this.props.colors.colorMode,
+        },
+      }));
+    }
+
+    const LeftOperation = [
+      "color by categorical metadata",
+      "color by continuous metadata",
+    ];
+    const RightOperation = [
+      "color by expression",
+      "color by geneset mean expression",
+    ];
+    if (
       this.props.id === "legend1" &&
-      (colors.colorMode === "color by expression" ||
-        colors.colorMode === "color by geneset mean expression")
+      (RightOperation.includes(colors.colorMode) ||
+        (colors.colorMode === null &&
+          RightOperation.includes(this.state.colorState.colorMode)))
     ) {
       return;
     }
     if (
       this.props.id === "legend2" &&
-      (colors.colorMode === "color by categorical metadata" ||
-        colors.colorMode === "color by continuous metadata")
+      (LeftOperation.includes(colors.colorMode) ||
+        (colors.colorMode === null &&
+          LeftOperation.includes(this.state.colorState.colorMode)))
     ) {
       return;
     }

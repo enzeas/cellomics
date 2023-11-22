@@ -240,6 +240,8 @@ class Graph extends React.Component {
         layoutChoice: null,
       },
       colorState: {
+        colorAccessor: null,
+        colorMode: null,
         colors: null,
         colorDf: null,
         colorTable: null,
@@ -553,25 +555,36 @@ class Graph extends React.Component {
       pointDilationData,
       pointDilationLabel
     );
-
+    const LeftOperation = [
+      "color by categorical metadata",
+      "color by continuous metadata",
+    ];
+    const RightOperation = [
+      "color by expression",
+      "color by geneset mean expression",
+    ];
     if (
       this.props.id === "viewportRef1" &&
-      (colorsProp.colorMode === "color by expression" ||
-        colorsProp.colorMode === "color by geneset mean expression")
+      (RightOperation.includes(colorsProp.colorMode) ||
+        (colorsProp.colorMode === null &&
+          RightOperation.includes(this.state.colorState.colorMode)))
     ) {
       colors = this.state.colorState.colors;
     } else if (
       this.props.id === "viewportRef2" &&
-      (colorsProp.colorMode === "color by categorical metadata" ||
-        colorsProp.colorMode === "color by continuous metadata")
+      (LeftOperation.includes(colorsProp.colorMode) ||
+        (colorsProp.colorMode === null &&
+          LeftOperation.includes(this.state.colorState.colorMode)))
     ) {
       colors = this.state.colorState.colors;
     }
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       colorState: {
         ...prevState.colorState,
-        colors: colors
-      }
+        colors: colors,
+        colorMode: this.props.colors.colorMode,
+        colorAccessor: this.props.colors.colorAccessor,
+      },
     }));
 
     const { width, height } = viewport;
