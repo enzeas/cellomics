@@ -73,6 +73,7 @@
     "regenerator-runtime": "^0.13.7",
     "regl": "^2.1.0",
     "sha1": "^1.1.1",
+    "simple-statistics": "^7.8.3",
     "tinyqueue": "^2.0.3",
     "whatwg-fetch": "^3.2.0"
   },
@@ -137,6 +138,7 @@
     "puppeteer": "^8.0.0",
     "rimraf": "^3.0.2",
     "serve-favicon": "^2.5.0",
+    "simple-statistics": "^7.8.3",
     "terser-webpack-plugin": "^5.1.1",
     "webpack": "^5.88.2",
     "webpack-cli": "^4.6.0",

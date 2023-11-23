@@ -6,6 +6,7 @@ import * as d3 from "d3";
 import { mat3 } from "gl-matrix";
 import memoize from "memoize-one";
 import Async from "react-async";
+import { sampleCorrelation } from "simple-statistics";
 
 import * as globals from "../../globals";
 import styles from "./scatterplot.css";
@@ -260,6 +261,11 @@ class Scatterplot extends React.PureComponent {
       yScale
     );
 
+    const r = sampleCorrelation(
+      expressionXDf.icol(0).asArray(),
+      expressionYDf.icol(0).asArray()
+    ).toFixed(3);
+
     const colors = this.computePointColors(colorTable.rgb);
 
     const { colorAccessor } = colorsProp;
@@ -286,6 +292,7 @@ class Scatterplot extends React.PureComponent {
       height,
       xScale,
       yScale,
+      r,
     };
   };
 
@@ -530,6 +537,7 @@ class Scatterplot extends React.PureComponent {
                     scatterplotXXaccessor={scatterplotXXaccessor}
                     xScale={asyncProps.xScale}
                     yScale={asyncProps.yScale}
+                    r={asyncProps.r}
                   />
                 );
               }}
@@ -550,6 +558,7 @@ const ScatterplotAxis = React.memo(
     scatterplotXXaccessor,
     xScale,
     yScale,
+    r,
   }) => {
     /*
     Axis for the scatterplot, rendered with SVG/D3.  Props:
@@ -590,6 +599,14 @@ const ScatterplotAxis = React.memo(
         .attr("class", "y axis")
         .call(yAxis);
 
+      // adding correlation. For r, it's at (30, 30)
+      svg
+        .append("text")
+        .attr("x", 30)
+        .attr("y", 30)
+        .attr("class", "label")
+        .style("font-style", "italic")
+        .text(`r=${r}`);
       // adding label. For x-axis, it's at (10, 10), and for y-axis at (width, height-10).
       svg
         .append("text")
@@ -607,7 +624,7 @@ const ScatterplotAxis = React.memo(
         .attr("class", "label")
         .style("font-style", "italic")
         .text(scatterplotXXaccessor);
-    }, [scatterplotXXaccessor, scatterplotYYaccessor, xScale, yScale]);
+    }, [scatterplotXXaccessor, scatterplotYYaccessor, xScale, yScale, r]);
 
     return (
       <svg
