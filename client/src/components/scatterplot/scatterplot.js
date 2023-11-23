@@ -41,7 +41,7 @@ const getYScale = memoize(getScale);
 
 @connect((state) => {
   const { obsCrossfilter: crossfilter } = state;
-  const { scatterplotXXaccessor, scatterplotYYaccessor } = state.controls;
+  const { scatterplotXXaccessor, scatterplotYYaccessor, scatterplotXXisObs, scatterplotYYisObs } = state.controls;
 
   return {
     annoMatrix: state.annoMatrix,
@@ -51,6 +51,8 @@ const getYScale = memoize(getScale);
     // Accessors are var/gene names (strings)
     scatterplotXXaccessor,
     scatterplotYYaccessor,
+    scatterplotXXisObs,
+    scatterplotYYisObs,
 
     crossfilter,
     genesets: state.genesets.genesets,
@@ -236,6 +238,8 @@ class Scatterplot extends React.PureComponent {
     const {
       scatterplotXXaccessor,
       scatterplotYYaccessor,
+      scatterplotXXisObs,
+      scatterplotYYisObs,
       colors: colorsProp,
       crossfilter,
       pointDilation,
@@ -245,6 +249,8 @@ class Scatterplot extends React.PureComponent {
       await this.fetchData(
         scatterplotXXaccessor,
         scatterplotYYaccessor,
+        scatterplotXXisObs,
+        scatterplotYYisObs,
         colorsProp,
         pointDilation
       );
@@ -313,6 +319,13 @@ class Scatterplot extends React.PureComponent {
     ];
   }
 
+  createObsQuery(geneName) {
+    return [
+      "obs",
+      geneName
+    ];
+  }  
+
   createColorByQuery(colors) {
     const { annoMatrix, genesets } = this.props;
     const { schema } = annoMatrix;
@@ -337,6 +350,8 @@ class Scatterplot extends React.PureComponent {
   async fetchData(
     scatterplotXXaccessor,
     scatterplotYYaccessor,
+    scatterplotXXisObs,
+    scatterplotYYisObs,
     colors,
     pointDilation
   ) {
@@ -345,12 +360,24 @@ class Scatterplot extends React.PureComponent {
 
     const promises = [];
     // X and Y dimensions
-    promises.push(
-      annoMatrix.fetch(...this.createXQuery(scatterplotXXaccessor))
-    );
-    promises.push(
-      annoMatrix.fetch(...this.createXQuery(scatterplotYYaccessor))
-    );
+    if (scatterplotXXisObs) {
+      promises.push(
+        annoMatrix.fetch(...this.createObsQuery(scatterplotXXaccessor))
+      );
+    } else {
+      promises.push(
+        annoMatrix.fetch(...this.createXQuery(scatterplotXXaccessor))
+      );
+    }
+    if (scatterplotYYisObs) {
+      promises.push(
+        annoMatrix.fetch(...this.createObsQuery(scatterplotYYaccessor))
+      ); 
+    } else {
+      promises.push(
+        annoMatrix.fetch(...this.createXQuery(scatterplotYYaccessor))
+      );     
+    }
 
     // color
     const query = this.createColorByQuery(colors);
@@ -438,6 +465,8 @@ class Scatterplot extends React.PureComponent {
       annoMatrix,
       scatterplotXXaccessor,
       scatterplotYYaccessor,
+      scatterplotXXisObs,
+      scatterplotYYisObs,
       colors,
       crossfilter,
       pointDilation,
@@ -517,6 +546,8 @@ class Scatterplot extends React.PureComponent {
               annoMatrix,
               scatterplotXXaccessor,
               scatterplotYYaccessor,
+              scatterplotXXisObs,              
+              scatterplotYYisObs,
               colors,
               crossfilter,
               pointDilation,

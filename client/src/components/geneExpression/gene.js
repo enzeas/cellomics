@@ -26,30 +26,44 @@ class Gene extends React.Component {
     };
   }
 
-  onColorChangeClick = () => {
-    const { dispatch, gene } = this.props;
-    dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
+  onColorChangeClick = (e) => {
+    const { dispatch, gene, isObs } = this.props;
+    console.log(this);
+    if (isObs) {
+      dispatch({
+        type: "color by continuous metadata",
+        colorAccessor: gene,
+      });
+    } else {
+      dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
+    }
+    e.stopPropagation();
   };
 
-  handleGeneExpandClick = () => {
+  handleGeneExpandClick = (e) => {
     const { geneIsExpanded } = this.state;
     this.setState({ geneIsExpanded: !geneIsExpanded });
+    e.stopPropagation();
   };
 
-  handleSetGeneAsScatterplotX = () => {
-    const { dispatch, gene } = this.props;
+  handleSetGeneAsScatterplotX = (e) => {
+    const { dispatch, gene, isObs } = this.props;
     dispatch({
       type: "set scatterplot x",
       data: gene,
+      isObs: isObs,
     });
+    e.stopPropagation();
   };
 
-  handleSetGeneAsScatterplotY = () => {
-    const { dispatch, gene } = this.props;
+  handleSetGeneAsScatterplotY = (e) => {
+    const { dispatch, gene, isObs } = this.props;
     dispatch({
       type: "set scatterplot y",
       data: gene,
+      isObs: isObs,
     });
+    e.stopPropagation();
   };
 
   handleDeleteGeneFromSet = () => {
@@ -66,9 +80,15 @@ class Gene extends React.Component {
       isScatterplotYYaccessor,
       quickGene,
       removeGene,
+      isObs,
     } = this.props;
     const { geneIsExpanded } = this.state;
-    const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
+    let geneSymbolWidth;
+    if (isObs) {
+      geneSymbolWidth = 60 + geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 40;
+    } else {
+      geneSymbolWidth = 60 + geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0;
+    }
 
     return (
       <div>
@@ -125,22 +145,25 @@ class Gene extends React.Component {
                 isUserDefined
                 field={gene}
                 mini
-                width={MINI_HISTOGRAM_WIDTH}
+                width={MINI_HISTOGRAM_WIDTH - (isObs ? 40 : 0)}
+                isObs={isObs}
               />
             ) : null}
           </div>
           <div style={{ flexShrink: 0, marginLeft: 2 }}>
-            <Button
-              minimal
-              small
-              data-testid={`delete-from-geneset:${gene}`}
-              onClick={
-                quickGene ? removeGene(gene) : this.handleDeleteGeneFromSet
-              }
-              intent="none"
-              style={{ fontWeight: 700, marginRight: 2 }}
-              icon={<Icon icon="trash" iconSize={10} />}
-            />
+            {isObs || (
+              <Button
+                minimal
+                small
+                data-testid={`delete-from-geneset:${gene}`}
+                onClick={
+                  quickGene ? removeGene(gene) : this.handleDeleteGeneFromSet
+                }
+                intent="none"
+                style={{ fontWeight: 700, marginRight: 2 }}
+                icon={<Icon icon="trash" iconSize={10} />}
+              />
+            )}
             <Button
               minimal
               small
@@ -186,7 +209,7 @@ class Gene extends React.Component {
             />
           </div>
         </div>
-        {geneIsExpanded && <HistogramBrush isUserDefined field={gene} />}
+        {geneIsExpanded && <HistogramBrush isUserDefined field={gene} isObs={isObs}/>}
       </div>
     );
   }

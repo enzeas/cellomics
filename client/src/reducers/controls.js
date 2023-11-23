@@ -123,11 +123,13 @@ const Controls = (
       return {
         ...state,
         scatterplotXXaccessor: action.data,
+        scatterplotXXisObs: action?.isObs ?? false
       };
     case "set scatterplot y":
       return {
         ...state,
         scatterplotYYaccessor: action.data,
+        scatterplotYYisObs: action?.isObs ?? false
       };
     case "clear scatterplot":
       return {

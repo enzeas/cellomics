@@ -1,5 +1,5 @@
 import React from "react";
-import { AnchorButton, Tooltip, Position } from "@blueprintjs/core";
+import { AnchorButton, Tooltip, Position, Collapse } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
@@ -22,6 +22,7 @@ class Categories extends React.Component {
       newCategoryText: "",
       categoryToDuplicate: null,
       expandedCats: new Set(),
+      catsOpen: true,
     };
   }
 
@@ -119,6 +120,7 @@ class Categories extends React.Component {
       categoryToDuplicate,
       newCategoryText,
       expandedCats,
+      catsOpen,
     } = this.state;
     const { writableCategoriesEnabled, schema } = this.props;
     /* all names, sorted in display order.  Will be rendered in this order */
@@ -206,17 +208,20 @@ class Categories extends React.Component {
             )
         )}
         {/* WRITEABLE FIELDS */}
-        {allCategoryNames.map((catName) =>
-          schema.annotations.obsByName[catName].writable ? (
-            <Category
-              key={catName}
-              metadataField={catName}
-              onExpansionChange={this.onExpansionChange}
-              isExpanded={expandedCats.has(catName)}
-              createAnnoModeActive={createAnnoModeActive}
-            />
-          ) : null
-        )}
+        <Collapse isOpen={catsOpen}>
+          {allCategoryNames.map((catName) =>
+            schema.annotations.obsByName[catName].writable &&
+            !catName.startsWith("leiden_v") ? (
+              <Category
+                key={catName}
+                metadataField={catName}
+                onExpansionChange={this.onExpansionChange}
+                isExpanded={expandedCats.has(catName)}
+                createAnnoModeActive={createAnnoModeActive}
+              />
+            ) : null
+          )}
+        </Collapse>
       </div>
     );
   }
