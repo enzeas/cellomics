@@ -115,17 +115,6 @@ class Gene extends React.Component {
             }}
           >
             <div>
-              {!quickGene && (
-                <Icon
-                  icon="drag-handle-horizontal"
-                  iconSize={12}
-                  style={{
-                    marginRight: 7,
-                    position: "relative",
-                    top: -1,
-                  }}
-                />
-              )}
               <Truncate
                 tooltipAddendum={geneDescription && `: ${geneDescription}`}
               >

@@ -1,5 +1,11 @@
 import React from "react";
-import { AnchorButton, Tooltip, Position, Collapse } from "@blueprintjs/core";
+import {
+  AnchorButton,
+  Tooltip,
+  Position,
+  Collapse,
+  H4,
+} from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
@@ -207,6 +213,18 @@ class Categories extends React.Component {
               />
             )
         )}
+        <hr/>
+        <AnchorButton
+          onClick={() => {
+            this.setState({ 
+              catsOpen: !catsOpen
+            });
+          }}
+          text={<span><H4>Categorical</H4></span>}
+          fill
+          minimal
+          rightIcon={catsOpen ? "chevron-down" : "chevron-right"} small
+        /> 
         {/* WRITEABLE FIELDS */}
         <Collapse isOpen={catsOpen}>
           {allCategoryNames.map((catName) =>
