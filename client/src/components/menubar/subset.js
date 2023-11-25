@@ -6,7 +6,6 @@ import * as globals from "../../globals";
 const Subset = React.memo((props) => {
   const {
     subsetPossible,
-    subsetResetPossible,
     handleSubset,
     handleSubsetReset,
   } = props;
@@ -34,7 +33,6 @@ const Subset = React.memo((props) => {
         <AnchorButton
           type="button"
           data-testid="reset-subset-button"
-          disabled={!subsetResetPossible}
           icon="full-circle"
           onClick={handleSubsetReset}
         />

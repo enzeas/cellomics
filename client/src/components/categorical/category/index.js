@@ -45,6 +45,8 @@ const LABEL_WIDTH_ANNO = LABEL_WIDTH - ANNO_BUTTON_WIDTH;
     crossfilter: state.obsCrossfilter,
     isUserAnno,
     genesets: state.genesets.genesets,
+    chromeKeyCategorical: state.controls.chromeKeyCategorical,
+    chromeKeyContinuous: state.controls.chromeKeyContinuous
   };
 })
 class Category extends React.PureComponent {
@@ -171,7 +173,13 @@ class Category extends React.PureComponent {
 
   updateColorTable(colorData) {
     // color table, which may be null
-    const { schema, colors, metadataField } = this.props;
+    const {
+      schema,
+      colors,
+      metadataField,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
+    } = this.props;
     const { colorAccessor, userColors, colorMode } = colors;
     return {
       isColorAccessor: colorAccessor === metadataField,
@@ -182,6 +190,8 @@ class Category extends React.PureComponent {
         colorAccessor,
         colorData,
         schema,
+        chromeKeyCategorical,
+        chromeKeyContinuous,
         userColors
       ),
     };

@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import * as d3 from "d3";
-import { interpolateCool } from "d3-scale-chromatic";
+import * as chromatic from "d3-scale-chromatic";
 
 import {
   createColorTable,
@@ -35,13 +35,13 @@ const continuous = (selectorId, colorScale, colorAccessor) => {
 
   const ctx = canvas.getContext("2d");
 
-  const legendScale = d3
+  let legendScale = d3
     .scaleLinear()
     .range([1, legendHeight - margin.top - margin.bottom])
     .domain([
-      colorScale.domain()[1],
       colorScale.domain()[0],
-    ]); /* we flip this to make viridis colors dark if high in the color scale */
+      colorScale.domain()[1],
+    ]);
 
   // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
   const image = ctx.createImageData(1, legendHeight);
@@ -63,6 +63,14 @@ const continuous = (selectorId, colorScale, colorAccessor) => {
     ctx.fillRect(0,i,1,1);
   });
   */
+
+  legendScale = d3
+  .scaleLinear()
+  .range([1, legendHeight - margin.top - margin.bottom])
+  .domain([
+    colorScale.domain()[1],
+    colorScale.domain()[0],
+  ]); /* we flip this to make viridis colors dark if high in the color scale */
 
   const legendAxis = d3
     .axisRight(legendScale)
@@ -109,6 +117,8 @@ const continuous = (selectorId, colorScale, colorAccessor) => {
   annoMatrix: state.annoMatrix,
   colors: state.colors,
   genesets: state.genesets.genesets,
+  chromeKeyContinuous: state.controls.chromeKeyContinuous,
+  chromeKeyCategorical: state.controls.chromeKeyCategorical,
 }))
 class ContinuousLegend extends React.Component {
   constructor(props) {
@@ -122,9 +132,16 @@ class ContinuousLegend extends React.Component {
   }
 
   async componentDidUpdate(prevProps) {
-    const { annoMatrix, colors, genesets } = this.props;
+    const {
+      annoMatrix,
+      colors,
+      genesets,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
+    } = this.props;
     if (!colors || !annoMatrix) return;
 
+    // TODO: use prevProps to avoid unnecessary updates
     if (
       colors.colorMode !== null &&
       colors.colorMode !== this.state.colorState.colorMode
@@ -162,7 +179,11 @@ class ContinuousLegend extends React.Component {
       return;
     }
 
-    if (colors !== prevProps?.colors || annoMatrix !== prevProps?.annoMatrix) {
+    if (
+      colors !== prevProps?.colors ||
+      annoMatrix !== prevProps?.annoMatrix ||
+      chromeKeyContinuous !== prevProps?.chromeKeyContinuous
+    ) {
       const { schema } = annoMatrix;
       const { colorMode, colorAccessor, userColors } = colors;
 
@@ -179,6 +200,8 @@ class ContinuousLegend extends React.Component {
         colorAccessor,
         colorDf,
         schema,
+        chromeKeyCategorical,
+        chromeKeyContinuous,
         userColors
       );
 
@@ -195,7 +218,9 @@ class ContinuousLegend extends React.Component {
         if (range()[0][0] !== "#") {
           continuous(
             idHash,
-            d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
+            d3
+              .scaleSequential(chromatic[`interpolate${chromeKeyContinuous}`])
+              .domain(colorScale.domain()),
             colorAccessor
           );
         }

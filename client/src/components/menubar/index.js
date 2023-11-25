@@ -1,6 +1,15 @@
 import React from "react";
 import { connect } from "react-redux";
-import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
+import {
+  ButtonGroup,
+  AnchorButton,
+  Slider,
+  Tooltip,
+  Dialog,
+  ControlGroup,
+  MenuItem,
+} from "@blueprintjs/core";
+import { Select } from "@blueprintjs/select"
 
 import * as globals from "../../globals";
 import styles from "./menubar.css";
@@ -11,6 +20,46 @@ import Subset from "./subset";
 import UndoRedoReset from "./undoRedo";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
+import * as chromatic from "d3-scale-chromatic";
+import * as d3 from "d3";
+
+const continuous = (selectorId, colorScale) => {
+  const legendHeight = 30;
+  const legendWidth = 300;
+
+  const canvas = d3
+    .select(selectorId)
+    .style("height", `${legendHeight}px`)
+    .style("width", `${legendWidth}px`)
+    .append("canvas")
+    .attr("width", legendWidth)
+    .attr("height", 1)
+    .style("height", `${legendHeight}px`)
+    .style("width", `${legendWidth}px`)
+    .style("background","#ccc")
+    .node();
+
+  const ctx = canvas.getContext("2d");
+
+  const legendScale = d3
+    .scaleLinear()
+    .range([1, legendWidth])
+    .domain([
+      colorScale.domain()[1],
+      colorScale.domain()[0],
+    ]); 
+
+  const image = ctx.createImageData(legendWidth, 1);
+  d3.range(legendWidth).forEach((i) => {
+    const c = d3.rgb(colorScale(legendScale.invert(i)));
+    image.data[4 * i] = c.r;
+    image.data[4 * i + 1] = c.g;
+    image.data[4 * i + 2] = c.b;
+    image.data[4 * i + 3] = 255;
+  });
+  ctx.putImageData(image, 0, 0);
+
+};
 
 @connect((state) => {
   const { annoMatrix } = state;
@@ -45,6 +94,10 @@ import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
     tosURL: state.config?.parameters?.about_legal_tos,
     privacyURL: state.config?.parameters?.about_legal_privacy,
     categoricalSelection: state.categoricalSelection,
+    pointScaler: state.controls.pointScaler,
+    chromeKeyContinuous: state.controls.chromeKeyContinuous,
+    chromeKeyCategorical: state.controls.chromeKeyCategorical,
+    chromeKeys: Object.keys(chromatic).filter((item)=>item.startsWith("interpolate")).map((item)=>item.replace("interpolate","")).sort(),
   };
 })
 class MenuBar extends React.PureComponent {
@@ -76,8 +129,33 @@ class MenuBar extends React.PureComponent {
     super(props);
     this.state = {
       pendingClipPercentiles: null,
+      preferencesDialogOpen: false,
     };
   }
+
+  componentDidUpdate = (prevProps) => {
+    const { chromeKeyCategorical, chromeKeyContinuous } =
+      this.props;
+
+    if (chromeKeyCategorical !== prevProps.chromeKeyCategorical) {
+      d3.select("#categorical_legend_preferences").selectAll("*").remove();
+      continuous(
+        "#categorical_legend_preferences",
+        d3
+          .scaleSequential(chromatic[`interpolate${chromeKeyCategorical}`])
+          .domain([0, 1])
+      );
+    }
+    if (chromeKeyContinuous !== prevProps.chromeKeyContinuous) {
+      d3.select("#continuous_legend_preferences").selectAll("*").remove();
+      continuous(
+        "#continuous_legend_preferences",
+        d3
+          .scaleSequential(chromatic[`interpolate${chromeKeyContinuous}`])
+          .domain([0, 1])
+      );
+    }
+  };
 
   isClipDisabled = () => {
     /*
@@ -206,8 +284,12 @@ class MenuBar extends React.PureComponent {
       colorAccessor,
       subsetPossible,
       subsetResetPossible,
+      pointScaler,
+      chromeKeyContinuous,
+      chromeKeyCategorical,
+      chromeKeys,
     } = this.props;
-    const { pendingClipPercentiles } = this.state;
+    const { preferencesDialogOpen, pendingClipPercentiles } = this.state;
 
     const isColoredByCategorical = !!categoricalSelection?.[colorAccessor];
 
@@ -221,7 +303,7 @@ class MenuBar extends React.PureComponent {
       <div
         style={{
           position: "absolute",
-          right: 8,
+          right: -100,
           top: 0,
           display: "flex",
           flexDirection: "row-reverse",
@@ -231,27 +313,140 @@ class MenuBar extends React.PureComponent {
           zIndex: 3,
         }}
       >
+        <Tooltip
+          content="Preferences"
+          position="bottom"
+          hoverOpenDelay={globals.tooltipHoverOpenDelay}
+        >
+          <AnchorButton
+            className={styles.menubarButton}
+            icon="cog"
+            onClick={() => {
+              this.setState({ preferencesDialogOpen: true });
+            }}
+          />
+        </Tooltip>
+        <Dialog
+          title="Preferences"
+          isOpen={preferencesDialogOpen}
+          onClose={() => {
+            this.setState({ preferencesDialogOpen: false });
+          }}
+          onOpened={() => {
+            d3.select("#categorical_legend_preferences")
+              .selectAll("*")
+              .remove();
+            continuous(
+              "#categorical_legend_preferences",
+              d3
+                .scaleSequential(
+                  chromatic[`interpolate${chromeKeyCategorical}`]
+                )
+                .domain([0, 1])
+            );
+
+            d3.select("#continuous_legend_preferences").selectAll("*").remove();
+            continuous(
+              "#continuous_legend_preferences",
+              d3
+                .scaleSequential(chromatic[`interpolate${chromeKeyContinuous}`])
+                .domain([0, 1])
+            );
+          }}
+        >
+          <div
+            style={{
+              margin: "0 auto",
+              paddingTop: "10px",
+              width: "90%",
+            }}
+          >
+            <ControlGroup fill={true} vertical={false}>
+              <span style={{ width: "160px", paddingRight: "10px" }}>
+                Point size scaler:
+              </span>
+              <Slider
+                min={0.0}
+                max={10.0}
+                stepSize={0.1}
+                labelStepSize={5.0}
+                showTrackFill={false}
+                onChange={(value) => {
+                  dispatch({
+                    type: "set point scaler",
+                    scaler: Math.max(0.01, value),
+                  });
+                }}
+                value={pointScaler}
+              />
+            </ControlGroup>
+            <div style={{ paddingTop: "20px", paddingBottom: "5px" }}>
+              <b>Categorical colorscale:</b>
+            </div>
+            <ControlGroup fill={true} vertical={false}>
+              <Select
+                items={chromeKeys}
+                filterable={false}
+                itemRenderer={(d, { handleClick }) => {
+                  return <MenuItem onClick={handleClick} key={d} text={d} />;
+                }}
+                onItemSelect={(d) => {
+                  dispatch({ type: "set chrome key categorical", key: d });
+                }}
+              >
+                <AnchorButton
+                  text={`${chromeKeyCategorical}`}
+                  rightIcon="double-caret-vertical"
+                />
+              </Select>
+              <div id="categorical_legend_preferences" />
+            </ControlGroup>
+            <div style={{ paddingTop: "20px", paddingBottom: "5px" }}>
+              <b>Continuous colorscale:</b>
+            </div>
+            <ControlGroup fill={true} vertical={false}>
+              <Select
+                items={chromeKeys}
+                filterable={false}
+                itemRenderer={(d, { handleClick }) => {
+                  return <MenuItem onClick={handleClick} key={d} text={d} />;
+                }}
+                onItemSelect={(d) => {
+                  dispatch({ type: "set chrome key continuous", key: d });
+                }}
+              >
+                <AnchorButton
+                  text={`${chromeKeyContinuous}`}
+                  rightIcon="double-caret-vertical"
+                />
+              </Select>
+              <div id="continuous_legend_preferences" />
+            </ControlGroup>
+          </div>
+        </Dialog>
         <UndoRedoReset
           dispatch={dispatch}
           undoDisabled={undoDisabled}
           redoDisabled={redoDisabled}
         />
-        <Clip
-          pendingClipPercentiles={pendingClipPercentiles}
-          clipPercentileMin={clipPercentileMin}
-          clipPercentileMax={clipPercentileMax}
-          handleClipOpening={this.handleClipOpening}
-          handleClipClosing={this.handleClipClosing}
-          handleClipCommit={this.handleClipCommit}
-          isClipDisabled={this.isClipDisabled}
-          handleClipOnKeyPress={this.handleClipOnKeyPress}
-          handleClipPercentileMaxValueChange={
-            this.handleClipPercentileMaxValueChange
-          }
-          handleClipPercentileMinValueChange={
-            this.handleClipPercentileMinValueChange
-          }
-        />
+        {false && (
+          <Clip
+            pendingClipPercentiles={pendingClipPercentiles}
+            clipPercentileMin={clipPercentileMin}
+            clipPercentileMax={clipPercentileMax}
+            handleClipOpening={this.handleClipOpening}
+            handleClipClosing={this.handleClipClosing}
+            handleClipCommit={this.handleClipCommit}
+            isClipDisabled={this.isClipDisabled}
+            handleClipOnKeyPress={this.handleClipOnKeyPress}
+            handleClipPercentileMaxValueChange={
+              this.handleClipPercentileMaxValueChange
+            }
+            handleClipPercentileMinValueChange={
+              this.handleClipPercentileMinValueChange
+            }
+          />
+        )}
         <Tooltip
           content="When a category is colored by, show labels on the graph"
           position="bottom"

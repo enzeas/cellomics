@@ -28,7 +28,6 @@ class Gene extends React.Component {
 
   onColorChangeClick = (e) => {
     const { dispatch, gene, isObs } = this.props;
-    console.log(this);
     if (isObs) {
       dispatch({
         type: "color by continuous metadata",

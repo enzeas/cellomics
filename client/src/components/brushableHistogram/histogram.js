@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { interpolateCool } from "d3-scale-chromatic";
+import * as chromatic from "d3-scale-chromatic";
 import * as d3 from "d3";
 
 import maybeScientific from "../../util/maybeScientific";
@@ -18,6 +18,7 @@ const Histogram = ({
   isColorBy,
   selectionRange,
   mini,
+  chromeKeyContinuous,
 }) => {
   const svgRef = useRef(null);
   const [brush, setBrush] = useState(null);
@@ -46,20 +47,19 @@ const Histogram = ({
       .attr("width", width + marginLeft + marginRight)
       .attr("height", height + marginTop + marginBottom)
       .append("g")
-      .attr("class", "histogram-container")
-      .attr("transform", `translate(${marginLeft},${marginTop})`);
+      .attr("class", "histogram-container");
 
     const colorScale = d3
-      .scaleSequential(interpolateCool)
+      .scaleSequential(chromatic[`interpolate${chromeKeyContinuous}`])
       .domain([0, bins.length]);
 
     const histogramScale = d3
       .scaleLinear()
       .domain(x.domain())
       .range([
-        colorScale.domain()[1],
         colorScale.domain()[0],
-      ]); /* we flip this to make colors dark if high in the color scale */
+        colorScale.domain()[1],
+      ]);
 
     if (binWidth > 0) {
       /* BINS */

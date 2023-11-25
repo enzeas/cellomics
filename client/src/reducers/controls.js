@@ -17,6 +17,9 @@ const Controls = (
     scatterplotXXaccessor: null, // just easier to read
     scatterplotYYaccessor: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
+    pointScaler: 1.0,
+    chromeKeyContinuous: "Oranges",
+    chromeKeyCategorical: "Rainbow",
   },
   action
 ) => {
@@ -94,6 +97,24 @@ const Controls = (
         error: action.error,
       };
     }
+    case "set point scaler": {
+      return {
+        ...state,
+        pointScaler: action.scaler
+      };
+    }     
+    case "set chrome key categorical": {
+      return {
+        ...state,
+        chromeKeyCategorical: action.key
+      };
+    } 
+    case "set chrome key continuous": {
+      return {
+        ...state,
+        chromeKeyContinuous: action.key
+      };
+    }   
 
     /*******************************
              User Events

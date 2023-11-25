@@ -1,6 +1,6 @@
 import { glPointFlags, glPointSize } from "../../util/glHelpers";
 
-export default function drawPointsRegl(regl) {
+export default function drawPointsRegl(regl, pointScaler=1.0) {
   return regl({
     vert: `
     precision mediump float;
@@ -31,7 +31,7 @@ export default function drawPointsRegl(regl) {
       getFlags(flag, isBackground, isSelected, isHighlight);
 
       float size = pointSize(nPoints, minViewportDimension, isSelected, isHighlight);
-      gl_PointSize = size * pow(distance, 0.5);
+      gl_PointSize = size * pow(distance, 0.5) * ${pointScaler*0.999};
 
       float z = isBackground ? zBottom : (isHighlight ? zTop : zMiddle);
       vec3 xy = projView * vec3(position, 1.);

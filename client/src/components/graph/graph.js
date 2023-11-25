@@ -77,6 +77,9 @@ function createModelTF() {
   colors: state.colors,
   pointDilation: state.pointDilation,
   genesets: state.genesets.genesets,
+  pointScaler: state.controls.pointScaler,
+  chromeKeyContinuous: state.controls.chromeKeyContinuous,
+  chromeKeyCategorical: state.controls.chromeKeyCategorical,
 }))
 class Graph extends React.Component {
   static createReglState(canvas) {
@@ -258,9 +261,13 @@ class Graph extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { selectionTool, currentSelection, graphInteractionMode } =
-      this.props;
-    const { toolSVG, viewport } = this.state;
+    const {
+      selectionTool,
+      currentSelection,
+      graphInteractionMode,
+      pointScaler,
+    } = this.props;
+    const { toolSVG, viewport, regl } = this.state;
     const hasResized =
       prevState.viewport.height !== viewport.height ||
       prevState.viewport.width !== viewport.width;
@@ -278,6 +285,10 @@ class Graph extends React.Component {
       };
     }
 
+    if (pointScaler !== prevProps.pointScaler && regl) {
+      const drawPoints = _drawPoints(regl, pointScaler);
+      stateChanges = { ...stateChanges, drawPoints };
+    }
     /*
     if the selection tool or state has changed, ensure that the selection
     tool correctly reflects the underlying selection.
@@ -522,6 +533,9 @@ class Graph extends React.Component {
       crossfilter,
       pointDilation,
       viewport,
+      pointScaler,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
     } = props.watchProps;
     const { modelTF } = this.state;
 
@@ -594,6 +608,9 @@ class Graph extends React.Component {
       flags,
       width,
       height,
+      pointScaler,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
     };
   };
 
@@ -770,7 +787,16 @@ class Graph extends React.Component {
   });
 
   updateReglAndRender(asyncProps, prevAsyncProps) {
-    const { positions, colors, flags, height, width } = asyncProps;
+    const {
+      positions,
+      colors,
+      flags,
+      height,
+      width,
+      pointScaler,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
+    } = asyncProps;
     this.cachedAsyncProps = asyncProps;
     const { pointBuffer, colorBuffer, flagBuffer } = this.state;
     let needToRenderCanvas = false;
@@ -790,11 +816,21 @@ class Graph extends React.Component {
       flagBuffer({ data: flags, dimension: 1 });
       needToRenderCanvas = true;
     }
+    if (pointScaler !== prevAsyncProps?.pointScaler) {
+      needToRenderCanvas = true;
+    }
+    if (chromeKeyCategorical !== prevAsyncProps?.chromeKeyCategorical) {
+      needToRenderCanvas = true;
+    }
+    if (chromeKeyContinuous !== prevAsyncProps?.chromeKeyContinuous) {
+      needToRenderCanvas = true;
+    }
     if (needToRenderCanvas) this.renderCanvas();
   }
 
   updateColorTable(colors, colorDf) {
-    const { annoMatrix } = this.props;
+    const { annoMatrix, chromeKeyCategorical, chromeKeyContinuous } =
+      this.props;
     const { schema } = annoMatrix;
 
     /* update color table state */
@@ -804,6 +840,8 @@ class Graph extends React.Component {
         null,
         null,
         schema,
+        chromeKeyCategorical,
+        chromeKeyContinuous,
         null
       );
     }
@@ -814,6 +852,8 @@ class Graph extends React.Component {
       colorAccessor,
       colorDf,
       schema,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
       userColors
     );
   }
@@ -835,7 +875,7 @@ class Graph extends React.Component {
     camera,
     projectionTF
   ) {
-    const { annoMatrix } = this.props;
+    const { annoMatrix, pointScaler } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
 
     const { schema } = annoMatrix;
@@ -847,16 +887,19 @@ class Graph extends React.Component {
       depth: 1,
       color: [1, 1, 1, 1],
     });
-    drawPoints({
-      distance: camera.distance(),
-      color: colorBuffer,
-      position: pointBuffer,
-      flag: flagBuffer,
-      count: annoMatrix.nObs,
-      projView,
-      nPoints: schema.dataframe.nObs,
-      minViewportDimension: Math.min(width, height),
-    });
+    drawPoints(
+      {
+        distance: camera.distance(),
+        color: colorBuffer,
+        position: pointBuffer,
+        flag: flagBuffer,
+        count: annoMatrix.nObs,
+        projView,
+        nPoints: schema.dataframe.nObs,
+        minViewportDimension: Math.min(width, height),
+      },
+      pointScaler
+    );
     regl._gl.flush();
   }
 
@@ -868,6 +911,9 @@ class Graph extends React.Component {
       layoutChoice,
       pointDilation,
       crossfilter,
+      pointScaler,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl } = this.state;
     const cameraTF = camera?.view()?.slice();
@@ -938,6 +984,9 @@ class Graph extends React.Component {
             pointDilation,
             crossfilter,
             viewport,
+            pointScaler,
+            chromeKeyCategorical,
+            chromeKeyContinuous,
           }}
         >
           <Async.Pending initial>

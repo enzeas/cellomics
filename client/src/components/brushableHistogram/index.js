@@ -41,6 +41,7 @@ const HEIGHT_MINI = 15 - MARGIN_MINI.TOP - MARGIN_MINI.BOTTOM;
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === field,
     continuousSelectionRange: state.continuousSelection[myName],
     isColorAccessor: state.colors.colorAccessor === field,
+    chromeKeyContinuous: state.controls.chromeKeyContinuous,
   };
 })
 class HistogramBrush extends React.PureComponent {
@@ -343,6 +344,7 @@ class HistogramBrush extends React.PureComponent {
       isObs,
       mini,
       setGenes,
+      chromeKeyContinuous,
     } = this.props;
 
     let { width } = this.props;
@@ -398,6 +400,7 @@ class HistogramBrush extends React.PureComponent {
                   isColorBy={isColorAccessor}
                   selectionRange={continuousSelectionRange}
                   mini={mini}
+                  chromeKeyContinuous={chromeKeyContinuous}
                 />
                 {!mini && (
                   <HistogramFooter

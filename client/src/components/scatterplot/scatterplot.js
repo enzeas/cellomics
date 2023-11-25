@@ -41,7 +41,12 @@ const getYScale = memoize(getScale);
 
 @connect((state) => {
   const { obsCrossfilter: crossfilter } = state;
-  const { scatterplotXXaccessor, scatterplotYYaccessor, scatterplotXXisObs, scatterplotYYisObs } = state.controls;
+  const {
+    scatterplotXXaccessor,
+    scatterplotYYaccessor,
+    scatterplotXXisObs,
+    scatterplotYYisObs,
+  } = state.controls;
 
   return {
     annoMatrix: state.annoMatrix,
@@ -56,6 +61,8 @@ const getYScale = memoize(getScale);
 
     crossfilter,
     genesets: state.genesets.genesets,
+    chromeKeyCategorical: state.controls.chromeKeyCategorical,
+    chromeKeyContinuous: state.controls.chromeKeyContinuous,
   };
 })
 class Scatterplot extends React.PureComponent {
@@ -221,9 +228,9 @@ class Scatterplot extends React.PureComponent {
   };
 
   getViewportDimensions = () => ({
-      height: window.innerHeight,
-      width: window.innerWidth,
-    });
+    height: window.innerHeight,
+    width: window.innerWidth,
+  });
 
   handleResize = () => {
     const { state } = this.state;
@@ -243,6 +250,8 @@ class Scatterplot extends React.PureComponent {
       colors: colorsProp,
       crossfilter,
       pointDilation,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
     } = props.watchProps;
 
     const [expressionXDf, expressionYDf, colorDf, pointDilationDf] =
@@ -297,7 +306,9 @@ class Scatterplot extends React.PureComponent {
       width,
       height,
       xScale,
-      yScale,
+      yScale,      
+      chromeKeyCategorical,
+      chromeKeyContinuous,
       r,
     };
   };
@@ -320,11 +331,8 @@ class Scatterplot extends React.PureComponent {
   }
 
   createObsQuery(geneName) {
-    return [
-      "obs",
-      geneName
-    ];
-  }  
+    return ["obs", geneName];
+  }
 
   createColorByQuery(colors) {
     const { annoMatrix, genesets } = this.props;
@@ -335,7 +343,8 @@ class Scatterplot extends React.PureComponent {
 
   updateColorTable(colors, colorDf) {
     /* update color table state */
-    const { annoMatrix } = this.props;
+    const { annoMatrix, chromeKeyCategorical, chromeKeyContinuous } =
+      this.props;
     const { schema } = annoMatrix;
     const { colorAccessor, userColors, colorMode } = colors;
     return createColorTable(
@@ -343,6 +352,8 @@ class Scatterplot extends React.PureComponent {
       colorAccessor,
       colorDf,
       schema,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
       userColors
     );
   }
@@ -372,11 +383,11 @@ class Scatterplot extends React.PureComponent {
     if (scatterplotYYisObs) {
       promises.push(
         annoMatrix.fetch(...this.createObsQuery(scatterplotYYaccessor))
-      ); 
+      );
     } else {
       promises.push(
         annoMatrix.fetch(...this.createXQuery(scatterplotYYaccessor))
-      );     
+      );
     }
 
     // color
@@ -470,6 +481,8 @@ class Scatterplot extends React.PureComponent {
       colors,
       crossfilter,
       pointDilation,
+      chromeKeyCategorical,
+      chromeKeyContinuous,
     } = this.props;
     const { minimized, regl, viewport } = this.state;
     const bottomToolbarGutter = 48; // gutter for bottom tool bar
@@ -546,12 +559,14 @@ class Scatterplot extends React.PureComponent {
               annoMatrix,
               scatterplotXXaccessor,
               scatterplotYYaccessor,
-              scatterplotXXisObs,              
+              scatterplotXXisObs,
               scatterplotYYisObs,
               colors,
               crossfilter,
               pointDilation,
               viewport,
+              chromeKeyCategorical,
+              chromeKeyContinuous,
             }}
           >
             <Async.Pending initial>Loading...</Async.Pending>

@@ -89,7 +89,7 @@ class Layout extends React.Component {
         </div>
         <div
           style={{
-            zIndex: 0,
+            zIndex: -1,
             gridArea: "mid / graph2-start / bottom / graph2-end",
             position: "relative",
             height: "inherit",

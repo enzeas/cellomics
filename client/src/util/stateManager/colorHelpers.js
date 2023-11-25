@@ -2,6 +2,7 @@
 Helper functions for the embedded graph colors
 */
 import * as d3 from "d3";
+import * as chromatic from "d3-scale-chromatic";
 import { interpolateRainbow, interpolateCool } from "d3-scale-chromatic";
 import memoize from "memoize-one";
 import * as globals from "../../globals";
@@ -88,6 +89,8 @@ function _createColorTable(
   colorByAccessor,
   colorByData,
   schema,
+  chromeKeyCategorical,
+  chromeKeyContinuous,
   userColors = null
 ) {
   switch (colorMode) {
@@ -96,22 +99,22 @@ function _createColorTable(
       if (userColors && colorByAccessor in userColors) {
         return createUserColors(data, colorByAccessor, schema, userColors);
       }
-      return createColorsByCategoricalMetadata(data, colorByAccessor, schema);
+      return createColorsByCategoricalMetadata(data, colorByAccessor, schema, chromeKeyCategorical);
     }
     case "color by continuous metadata": {
       const col = colorByData.col(colorByAccessor);
       const { min, max } = col.summarize();
-      return createColorsByContinuousMetadata(col.asArray(), min, max);
+      return createColorsByContinuousMetadata(col.asArray(), min, max, chromeKeyContinuous);
     }
     case "color by expression": {
       const col = colorByData.icol(0);
       const { min, max } = col.summarize();
-      return createColorsByContinuousMetadata(col.asArray(), min, max);
+      return createColorsByContinuousMetadata(col.asArray(), min, max, chromeKeyContinuous);
     }
     case "color by geneset mean expression": {
       const col = colorByData.icol(0);
       const { min, max } = col.summarize();
-      return createColorsByContinuousMetadata(col.asArray(), min, max);
+      return createColorsByContinuousMetadata(col.asArray(), min, max, chromeKeyContinuous);
     }
     default: {
       return defaultColors(schema.dataframe.nObs);
@@ -159,11 +162,18 @@ function _createUserColors(data, colorAccessor, schema, userColors) {
 }
 const createUserColors = memoize(_createUserColors);
 
-function _createColorsByCategoricalMetadata(data, colorAccessor, schema) {
-  const { categories } = schema.annotations.obsByName[colorAccessor];
-
+function _createColorsByCategoricalMetadata(data, colorAccessor, schema, chromeKeyCategorical) {
+  let { categories } = schema.annotations.obsByName[colorAccessor];
+  const cats = [];
+  for (const c of categories) {
+    if (data.includes(c) && c !== "unassigned") {
+      cats.push(c);
+    }
+  }
+  cats.push("unassigned")
+  categories = cats;
   const scale = d3
-    .scaleSequential(interpolateRainbow)
+    .scaleSequential(chromatic[`interpolate${chromeKeyCategorical}`])
     .domain([0, categories.length]);
 
   /* pre-create colors - much faster than doing it for each obs */
@@ -188,7 +198,7 @@ function createRgbArray(data, colors) {
   return rgb;
 }
 
-function _createColorsByContinuousMetadata(data, min, max) {
+function _createColorsByContinuousMetadata(data, min, max, chromeKeyContinuous) {
   const colorBins = 100;
   const scale = d3
     .scaleQuantile()
@@ -198,7 +208,7 @@ function _createColorsByContinuousMetadata(data, min, max) {
   /* pre-create colors - much faster than doing it for each obs */
   const colors = new Array(colorBins);
   for (let i = 0; i < colorBins; i += 1) {
-    colors[i] = parseRGB(interpolateCool(i / colorBins));
+    colors[i] = parseRGB(chromatic[`interpolate${chromeKeyContinuous}`](1 - i / colorBins));
   }
 
   const nonFiniteColor = parseRGB(globals.nonFiniteCellColor);
